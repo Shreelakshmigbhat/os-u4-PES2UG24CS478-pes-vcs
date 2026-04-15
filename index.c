@@ -141,10 +141,21 @@ int index_load(Index *index) {
         // file doesn't exist, empty index
         return 0;
     }
-    // TODO: Parse the file
+    char line[1024];
+    while (fgets(line, sizeof(line), f)) {
+        IndexEntry *entry = &index->entries[index->count++];
+        char hash_hex[HASH_HEX_SIZE + 1];
+        if (sscanf(line, "%o %64s %llu %u %511[^\n]", &entry->mode, hash_hex, &entry->mtime_sec, &entry->size, entry->path) != 5) {
+            fclose(f);
+            return -1;
+        }
+        if (hex_to_hash(hash_hex, &entry->hash) != 0) {
+            fclose(f);
+            return -1;
+        }
+    }
     fclose(f);
-    return -1;
-}
+    return 0;
 
 // Save the index to .pes/index atomically.
 //
