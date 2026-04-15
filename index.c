@@ -182,10 +182,23 @@ int index_save(const Index *index) {
     FILE *f = fopen(temp, "w");
     if (!f) return -1;
 
-    // TODO: Write entries and atomic rename
+    for (int i = 0; i < sorted.count; i++) {
+        const IndexEntry *entry = &sorted.entries[i];
+        char hash_hex[HASH_HEX_SIZE + 1];
+        hash_to_hex(&entry->hash, hash_hex);
+        fprintf(f, "%o %s %llu %u %s\n", entry->mode, hash_hex, entry->mtime_sec, entry->size, entry->path);
+    }
+
+    fflush(f);
+    int fd = fileno(f);
+    fsync(fd);
     fclose(f);
-    return -1;
-}
+
+    if (rename(temp, INDEX_FILE) != 0) {
+        unlink(temp);
+        return -1;
+    }
+    return 0;
 
 // Stage a file for the next commit.
 //
