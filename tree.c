@@ -133,8 +133,45 @@ int build_tree(const Index *index, const char *prefix, ObjectID *id_out) {
     Tree tree;
     tree.count = 0;
 
-    // TODO: Implement tree building logic
-    (void)index; (void)prefix; (void)id_out;
+    for (int i = 0; i < index->count; i++) {
+        const IndexEntry *entry = &index->entries[i];
+        const char *path = entry->path;
+        if (prefix[0] && strncmp(path, prefix, strlen(prefix)) != 0) continue;
+        if (prefix[0] && path[strlen(prefix)] != '/') continue;
+        const char *rel_path = path + strlen(prefix);
+        if (rel_path[0] == '/') rel_path++;
+        char *slash = strchr(rel_path, '/');
+        if (slash) {
+            // subdir
+            char subdir[256];
+            int len = slash - rel_path;
+            memcpy(subdir, rel_path, len);
+            subdir[len] = '\0';
+            // check if already added
+            int found = 0;
+            for (int j = 0; j < tree.count; j++) {
+                if (strcmp(tree.entries[j].name, subdir) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                TreeEntry *e = &tree.entries[tree.count++];
+                e->mode = MODE_DIR;
+                // TODO: Recurse for subdirectory
+                strcpy(e->name, subdir);
+            }
+        } else {
+            // file
+            TreeEntry *e = &tree.entries[tree.count++];
+            e->mode = entry->mode;
+            e->hash = entry->hash;
+            strcpy(e->name, rel_path);
+        }
+    }
+
+    // TODO: Sort and serialize
+    (void)id_out;
     return -1;
 }
 
