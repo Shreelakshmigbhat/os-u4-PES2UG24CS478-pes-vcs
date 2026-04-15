@@ -210,9 +210,10 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     void *data;
     size_t len;
     if (commit_serialize(&commit, &data, &len) != 0) return -1;
-
-    // TODO: Write object and update head
+    int ret = object_write(OBJ_COMMIT, data, len, commit_id_out);
     free(data);
-    (void)commit_id_out;
+    if (ret != 0) return -1;
+
+    // TODO: Update head
     return -1;
 }
