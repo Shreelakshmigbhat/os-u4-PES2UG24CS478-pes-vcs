@@ -177,8 +177,13 @@ int index_save(const Index *index) {
     Index sorted = *index;
     qsort(sorted.entries, sorted.count, sizeof(IndexEntry), compare_index_entry);
 
-    // TODO: Write to temp file
-    (void)sorted;
+    char temp[512];
+    sprintf(temp, "%s.tmp", INDEX_FILE);
+    FILE *f = fopen(temp, "w");
+    if (!f) return -1;
+
+    // TODO: Write entries and atomic rename
+    fclose(f);
     return -1;
 }
 
