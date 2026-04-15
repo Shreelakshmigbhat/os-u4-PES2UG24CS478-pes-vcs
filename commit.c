@@ -214,6 +214,5 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     free(data);
     if (ret != 0) return -1;
 
-    // TODO: Update head
-    return -1;
+    return head_update(commit_id_out);
 }
