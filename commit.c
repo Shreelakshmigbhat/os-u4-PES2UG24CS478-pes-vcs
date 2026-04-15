@@ -207,7 +207,12 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     commit.timestamp = time(NULL);
     strcpy(commit.message, message);
 
-    // TODO: Serialize and write
+    void *data;
+    size_t len;
+    if (commit_serialize(&commit, &data, &len) != 0) return -1;
+
+    // TODO: Write object and update head
+    free(data);
     (void)commit_id_out;
     return -1;
 }
