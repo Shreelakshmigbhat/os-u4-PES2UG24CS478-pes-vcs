@@ -115,6 +115,33 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
         return 0; // Already exists, success
     }
 
+    char path[1024];
+    object_path(id_out, path, sizeof(path));
+
+    // Create directory
+    char dir_path[1024];
+    strcpy(dir_path, path);
+    char *slash = strrchr(dir_path, '/');
+    if (slash) *slash = '\0';
+    mkdir(dir_path, 0755);
+
+    // Write to temp file
+    char temp_path[1024];
+    sprintf(temp_path, "%s.tmp", path);
+    int fd = open(temp_path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd == -1) {
+        free(content);
+        return -1;
+    }
+    if (write(fd, content, total_len) != (ssize_t)total_len) {
+        close(fd);
+        unlink(temp_path);
+        free(content);
+        return -1;
+    }
+    fsync(fd);
+    close(fd);
+
     free(content);
     return -1; // TODO: Continue implementation
 }
