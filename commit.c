@@ -197,7 +197,17 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     ObjectID tree_id;
     if (tree_from_index(&tree_id) != 0) return -1;
 
-    // TODO: Continue with commit creation
-    (void)message; (void)commit_id_out;
+    Commit commit;
+    commit.tree = tree_id;
+    commit.has_parent = 0;
+    if (head_read(&commit.parent) == 0) {
+        commit.has_parent = 1;
+    }
+    strcpy(commit.author, pes_author());
+    commit.timestamp = time(NULL);
+    strcpy(commit.message, message);
+
+    // TODO: Serialize and write
+    (void)commit_id_out;
     return -1;
 }
