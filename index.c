@@ -135,9 +135,14 @@ int index_status(const Index *index) {
 //
 // Returns 0 on success, -1 on error.
 int index_load(Index *index) {
-    // TODO: Implement index loading
-    // (See Lab Appendix for logical steps)
-    (void)index;
+    index->count = 0;
+    FILE *f = fopen(INDEX_FILE, "r");
+    if (!f) {
+        // file doesn't exist, empty index
+        return 0;
+    }
+    // TODO: Parse the file
+    fclose(f);
     return -1;
 }
 
