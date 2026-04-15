@@ -158,7 +158,10 @@ int build_tree(const Index *index, const char *prefix, ObjectID *id_out) {
             if (!found) {
                 TreeEntry *e = &tree.entries[tree.count++];
                 e->mode = MODE_DIR;
-                // TODO: Recurse for subdirectory
+                char sub_prefix[512];
+                if (prefix[0]) sprintf(sub_prefix, "%s/%s", prefix, subdir);
+                else sprintf(sub_prefix, "%s", subdir);
+                if (build_tree(index, sub_prefix, &e->hash) != 0) return -1;
                 strcpy(e->name, subdir);
             }
         } else {
