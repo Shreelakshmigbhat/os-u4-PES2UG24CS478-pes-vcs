@@ -199,7 +199,56 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
     }
     fclose(f);
 
-    // TODO: Continue with parsing and verification
+    // Verify hash
+    ObjectID computed;
+    compute_hash(buf, file_size, &computed);
+    if (memcmp(computed.hash, id->hash, HASH_SIZE) != 0) {
+        free(buf);
+        return -1;
+    }
+
+    // Parse header
+    char *null_pos = memchr(buf, '\0', file_size);
+    if (!null_pos) {
+        free(buf);
+        return -1;
+    }
+    size_t header_len = null_pos - (char*)buf;
+    char header[256];
+    memcpy(header, buf, header_len);
+    header[header_len] = '\0';
+
+    char type_str[10];
+    size_t size;
+    if (sscanf(header, "%s %zu", type_str, &size) != 2) {
+        free(buf);
+        return -1;
+    }
+
+    ObjectType t;
+    if (strcmp(type_str, "blob") == 0) t = OBJ_BLOB;
+    else if (strcmp(type_str, "tree") == 0) t = OBJ_TREE;
+    else if (strcmp(type_str, "commit") == 0) t = OBJ_COMMIT;
+    else {
+        free(buf);
+        return -1;
+    }
+
+    size_t data_len = file_size - (null_pos - (char*)buf + 1);
+    if (data_len != size) {
+        free(buf);
+        return -1;
+    }
+
+    *type_out = t;
+    *data_out = malloc(data_len);
+    if (!*data_out) {
+        free(buf);
+        return -1;
+    }
+    memcpy(*data_out, null_pos + 1, data_len);
+    *len_out = data_len;
+
     free(buf);
-    return -1;
+    return 0;
 }
