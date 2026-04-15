@@ -128,6 +128,12 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
 //   - tree_serialize  : convert your populated Tree struct into a binary buffer
 //   - object_write    : save that binary buffer to the store as OBJ_TREE
 //
+int compare_entry(const void *a, const void *b) {
+    const TreeEntry *ea = a;
+    const TreeEntry *eb = b;
+    return strcmp(ea->name, eb->name);
+}
+
 // Returns 0 on success, -1 on error.
 int build_tree(const Index *index, const char *prefix, ObjectID *id_out) {
     Tree tree;
@@ -173,9 +179,16 @@ int build_tree(const Index *index, const char *prefix, ObjectID *id_out) {
         }
     }
 
-    // TODO: Sort and serialize
-    (void)id_out;
-    return -1;
+    // sort
+    qsort(tree.entries, tree.count, sizeof(TreeEntry), compare_entry);
+
+    // serialize and write
+    void *data;
+    size_t len;
+    if (tree_serialize(&tree, &data, &len) != 0) return -1;
+    int ret = object_write(OBJ_TREE, data, len, id_out);
+    free(data);
+    return ret;
 }
 
 int tree_from_index(ObjectID *id_out) {
