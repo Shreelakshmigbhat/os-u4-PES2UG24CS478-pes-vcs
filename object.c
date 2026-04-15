@@ -142,8 +142,14 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     fsync(fd);
     close(fd);
 
+    if (rename(temp_path, path) == -1) {
+        unlink(temp_path);
+        free(content);
+        return -1;
+    }
+
     free(content);
-    return -1; // TODO: Continue implementation
+    return 0;
 }
 
 // Read an object from the store.
